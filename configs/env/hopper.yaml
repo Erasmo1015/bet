@@ -1,8 +1,8 @@
-name: kitchen-all-v0
+name: Hopper-v2
 args: []
 kwargs: {}
-obs_dim: 60
-action_dim: 9
+obs_dim: 11
+action_dim: 3
 action_min: null
 action_max: null
 
@@ -12,6 +12,6 @@ workspace:
   _target_: workspaces.adept_kitchen.AdeptKitchenWorkspace
 
 dataset_fn:
-  _target_: dataloaders.trajectory_loader.get_relay_kitchen_train_val
-  data_directory: ${env_vars.datasets.relay_kitchen}
+  _target_: dataloaders.trajectory_loader.get_gym_dataset
+  data_directory: ${env_vars.datasets.hopper}
   window_size: ${window_size}

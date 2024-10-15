@@ -25,3 +25,13 @@ bin/
 etc/
 lib/
 share/
+
+# others
+exp_local_sorted
+*.mp4
+*.npy
+*.json
+*.pkl
+experts/gcpc/
+*.pth
+*.tar.gz

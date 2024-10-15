@@ -17,9 +17,12 @@ from utils import (
 from typing import Union, Callable, Optional
 from tqdm import tqdm
 
-
+import pickle
 class RelayKitchenTrajectoryDataset(TensorDataset):
     def __init__(self, data_directory, device="cpu"):
+        # print current directory
+        import os
+        print(f"Relay kitchen loading: {os.getcwd()}")
         data_directory = Path(data_directory)
         observations = np.load(data_directory / "observations_seq.npy")
         actions = np.load(data_directory / "actions_seq.npy")
@@ -28,7 +31,9 @@ class RelayKitchenTrajectoryDataset(TensorDataset):
         observations, actions, masks = transpose_batch_timestep(
             observations, actions, masks
         )
+        print(" Shape of obs, actions and masks:", observations.shape, actions.shape, masks.shape)
         self.masks = masks
+        print(f"Mask0: {masks[0]}")
         super().__init__(
             torch.from_numpy(observations).to(device).float(),
             torch.from_numpy(actions).to(device).float(),
@@ -47,6 +52,57 @@ class RelayKitchenTrajectoryDataset(TensorDataset):
             result.append(self.actions[i, :T, :])
         return torch.cat(result, dim=0)
 
+class GymDataset(TensorDataset):
+    def __init__(self, data_directory, device="cpu"):
+        # print current directory
+        import os
+        print(f"Relay kitchen loading: {os.getcwd()}")
+        dataset_paths = data_directory.split(",")
+        # dataset_paths = [expert_file]
+        observations = []
+        actions = []
+        levels = []
+        for idx, dataset_path in enumerate(dataset_paths):
+            state_i, action_i = self.open_dataset(dataset_path)
+            level_i = [idx for i in range(len(state_i))]
+            observations.extend(state_i)
+            actions.extend(action_i)
+            levels.extend(level_i)
+        levels = np.array(levels, dtype='int')
+        self.levels = levels
+
+        observations = np.array(observations, dtype='float32')
+        actions = np.array(actions, dtype='float32')
+        masks = np.ones((actions.shape[0], actions.shape[1]))
+
+        print(" Shape of obs, actions and masks:", observations.shape, actions.shape, masks.shape)
+        self.masks = masks
+        super().__init__(
+            torch.from_numpy(observations).to(device).float(),
+            torch.from_numpy(actions).to(device).float(),
+            torch.from_numpy(masks).to(device).float(),
+        )
+        self.actions = self.tensors[1]
+
+    def get_seq_length(self, idx):
+        return int(self.masks[idx].sum().item())
+
+    def get_all_actions(self):
+        result = []
+        # mask out invalid actions
+        for i in range(len(self.masks)):
+            T = int(self.masks[i].sum())
+            result.append(self.actions[i, :T, :])
+        return torch.cat(result, dim=0)
+    
+    def open_dataset(self, dataset_path):
+        print("Work in ",os.getcwd())
+        dir = "/home/zichang/repo/bet/" + dataset_path
+        with open(dir, 'rb') as f:
+            trajectories = pickle.load(f)
+        state = [np.array(x, dtype=type) for x in trajectories['states']]
+        action = [np.array(x, dtype=type) for x in trajectories['actions']]
+        return state, action
 
 class CarlaMultipathTrajectoryDataset(Dataset):
     def __init__(
@@ -433,6 +489,25 @@ def get_relay_kitchen_train_val(
     relay_kitchen_trajectories = RelayKitchenTrajectoryDataset(data_directory)
     train_set, val_set = split_datasets(
         relay_kitchen_trajectories,
+        train_fraction=train_fraction,
+        random_seed=random_seed,
+    )
+    # Convert to trajectory slices.
+    train_trajectories = TrajectorySlicerSubset(train_set, window=window_size)
+    val_trajectories = TrajectorySlicerSubset(val_set, window=window_size)
+    return train_trajectories, val_trajectories
+
+def get_gym_dataset(
+    data_directory,
+    train_fraction=0.9,
+    random_seed=42,
+    device="cpu",
+    window_size=10,
+):
+
+    trajs = GymDataset(data_directory)
+    train_set, val_set = split_datasets(
+        trajs,
         train_fraction=train_fraction,
         random_seed=random_seed,
     )

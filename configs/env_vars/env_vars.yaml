@@ -1,4 +1,7 @@
 datasets:
-  carla_multipath_town04_merge: /path/to/datasets/carla_dataset
-  relay_kitchen: /path/to/datasets/relay_kitchen_dataset
+  carla_multipath_town04_merge: bet_data_release/carla
+  relay_kitchen: /home/zichang/repo/bet/bet_data_release/kitchen
   multimodal_push_fixed_target: /path/to/datasets/block_push_dataset
+  cheetah: experts/cheetah/HalfCheetah-v2_100_2402r.pkl,experts/cheetah/HalfCheetah-v2_100_4197r.pkl,experts/cheetah/HalfCheetah-v2_100_6321r.pkl
+  hopper: experts/hopper/Hopper-v2_100_409r.pkl,experts/hopper/Hopper-v2_100_885r.pkl,experts/hopper/Hopper-v2_100_3206r.pkl
+  walker: experts/walker/Walker2d-v2_100_3064r.pkl,experts/walker/Walker2d-v2_100_4359r.pkl,experts/walker/Walker2d-v2_100_5912r.pkl

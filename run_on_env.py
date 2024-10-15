@@ -1,3 +1,7 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1" # before import torch, keras
+os.environ['PYOPENGL_PLATFORM'] = 'egl'
+
 import hydra
 import joblib
 import numpy as np

@@ -22,6 +22,7 @@ class Workspace:
         print("Saving to {}".format(self.work_dir))
         self.cfg = cfg
         self.device = torch.device(cfg.device)
+        print(f"Seed: {cfg.seed}")
         utils.set_seed_everywhere(cfg.seed)
         self.dataset = hydra.utils.call(
             cfg.env.dataset_fn,
